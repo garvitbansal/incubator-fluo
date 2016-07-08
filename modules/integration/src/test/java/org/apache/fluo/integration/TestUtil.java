@@ -13,24 +13,30 @@
  * the License.
  */
 
-package org.apache.fluo.core.types;
+package org.apache.fluo.integration;
 
-import org.apache.fluo.api.client.Transaction;
-import org.apache.fluo.api.exceptions.CommitException;
+import org.apache.fluo.api.client.SnapshotBase;
+import org.apache.fluo.api.client.TransactionBase;
+import org.apache.fluo.api.data.Column;
 
-public class MockTransaction extends MockTransactionBase implements Transaction {
+public class TestUtil {
 
-  MockTransaction(String... entries) {
-    super(entries);
+  private TestUtil() {}
+
+  public static void increment(TransactionBase tx, String row, Column col, int val) {
+    int prev = 0;
+    String prevStr = tx.gets(row, col);
+    if (prevStr != null) {
+      prev = Integer.parseInt(prevStr);
+    }
+    tx.set(row, col, prev + val + "");
   }
 
-  @Override
-  public void commit() throws CommitException {
-    // does nothing
-  }
-
-  @Override
-  public void close() {
-    // no resources to close
+  public static int getOrDefault(SnapshotBase snap, String row, Column col, int defaultVal) {
+    String val = snap.gets(row, col);
+    if (val == null) {
+      return defaultVal;
+    }
+    return Integer.parseInt(val);
   }
 }

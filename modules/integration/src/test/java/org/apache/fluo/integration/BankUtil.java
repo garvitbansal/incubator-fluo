@@ -16,8 +16,6 @@
 package org.apache.fluo.integration;
 
 import org.apache.fluo.api.data.Column;
-import org.apache.fluo.api.types.StringEncoder;
-import org.apache.fluo.api.types.TypeLayer;
 import org.apache.fluo.core.impl.Environment;
 
 /**
@@ -25,28 +23,27 @@ import org.apache.fluo.core.impl.Environment;
  */
 public class BankUtil {
 
-  public static final TypeLayer typeLayer = new TypeLayer(new StringEncoder());
-  public static final Column BALANCE = typeLayer.bc().fam("account").qual("balance").vis();
+  public static final Column BALANCE = new Column("account", "balance");
 
   private BankUtil() {}
 
   public static void transfer(Environment env, String from, String to, int amount) throws Exception {
     TestTransaction tx = new TestTransaction(env);
 
-    int bal1 = tx.get().row(from).col(BALANCE).toInteger();
-    int bal2 = tx.get().row(to).col(BALANCE).toInteger();
+    int bal1 = Integer.parseInt(tx.gets(from, BALANCE));
+    int bal2 = Integer.parseInt(tx.gets(to, BALANCE));
 
-    tx.mutate().row(from).col(BALANCE).set(bal1 - amount);
-    tx.mutate().row(to).col(BALANCE).set(bal2 + amount);
+    tx.set(from, BALANCE, (bal1 - amount) + "");
+    tx.set(to, BALANCE, (bal2 + amount) + "");
 
     tx.done();
   }
 
   public static void setBalance(TestTransaction tx, String user, int amount) {
-    tx.mutate().row(user).col(BALANCE).set(amount);
+    tx.set(user, BALANCE, amount + "");
   }
 
   public static int getBalance(TestTransaction tx, String user) {
-    return tx.get().row(user).col(BALANCE).toInteger();
+    return Integer.parseInt(tx.gets(user, BALANCE));
   }
 }
